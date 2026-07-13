@@ -1,1356 +1,170 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Делители и кратные</title>
-  <style>
-    :root {
-      --bg: #fbf7f3;
-      --card: #ffffff;
-      --text: #302a27;
-      --muted: #8b7e77;
-      --line: #eadfd8;
-      --accent: #e9a7ad;
-      --accent-2: #b8d9c3;
-      --shadow: 0 14px 35px rgba(72, 52, 40, .10);
-      --radius: 26px;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background:
-        radial-gradient(circle at 15% 10%, #ffe7ea 0 18%, transparent 19%),
-        radial-gradient(circle at 80% 20%, #e4f4e8 0 16%, transparent 17%),
-        radial-gradient(circle at 50% 90%, #fff0d6 0 15%, transparent 16%),
-        var(--bg);
-      color: var(--text);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 24px;
-    }
-
-    .game {
-      width: min(1120px, 100%);
-      background: rgba(255, 255, 255, .72);
-      border: 1px solid rgba(234, 223, 216, .9);
-      border-radius: 34px;
-      box-shadow: var(--shadow);
-      padding: 22px;
-      backdrop-filter: blur(12px);
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      gap: 14px;
-      align-items: center;
-      margin-bottom: 18px;
-    }
-
-    .title h1 {
-      font-size: clamp(25px, 3vw, 40px);
-      margin: 0;
-      letter-spacing: -0.04em;
-    }
-
-    .title p {
-      margin: 5px 0 0;
-      color: var(--muted);
-      font-size: 15px;
-    }
-
-    .stats {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .pill {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 10px 14px;
-      font-weight: 700;
-      min-width: 86px;
-      text-align: center;
-    }
-
-    .timer.warning {
-      background: #fff0d6;
-    }
-
-    .timer.danger {
-      background: #ffe1dc;
-    }
-
-    .big-timer-wrap {
-      display: flex;
-      justify-content: center;
-      margin: 2px 0 8px;
-      position: relative;
-      z-index: 3;
-    }
-
-    .big-timer {
-      min-width: 210px;
-      border-radius: 28px;
-      padding: 14px 24px;
-      background: #ffffff;
-      border: 1px solid var(--line);
-      box-shadow: 0 14px 28px rgba(72, 52, 40, .10);
-      text-align: center;
-      transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
-    }
-
-    .big-timer .timer-label {
-      display: block;
-      margin-bottom: 3px;
-      font-size: 13px;
-      font-weight: 800;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-    }
-
-    .big-timer strong {
-      display: block;
-      font-size: clamp(34px, 5vw, 54px);
-      line-height: .95;
-      letter-spacing: -0.05em;
-    }
-
-    .big-timer.warning {
-      background: #fff0d6;
-      transform: scale(1.02);
-    }
-
-    .big-timer.danger {
-      background: #ffe1dc;
-      transform: scale(1.04);
-      box-shadow: 0 18px 34px rgba(239, 103, 82, .18);
-    }
-
-    .main {
-      display: grid;
-      grid-template-columns: 1fr 290px;
-      gap: 18px;
-    }
-
-    .board {
-      min-height: 560px;
-      background: rgba(255, 255, 255, .58);
-      border: 1px solid var(--line);
-      border-radius: 30px;
-      padding: 18px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .target-wrap {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 165px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .target-flower {
-      width: 154px;
-      height: 154px;
-      position: relative;
-      display: grid;
-      place-items: center;
-    }
-
-    .petal {
-      position: absolute;
-      width: 82px;
-      height: 82px;
-      border-radius: 56% 44% 58% 42%;
-      background: rgba(233, 167, 173, .35);
-      border: 1px solid rgba(233, 167, 173, .32);
-      transform-origin: center;
-    }
-
-    .petal:nth-child(1) { transform: translateY(-42px) rotate(8deg); }
-    .petal:nth-child(2) { transform: translateX(42px) rotate(82deg); background: rgba(184, 217, 195, .38); border-color: rgba(184, 217, 195, .35); }
-    .petal:nth-child(3) { transform: translateY(42px) rotate(172deg); }
-    .petal:nth-child(4) { transform: translateX(-42px) rotate(262deg); background: rgba(255, 224, 179, .45); border-color: rgba(255, 224, 179, .45); }
-    .petal:nth-child(5) { transform: translate(30px, -30px) rotate(46deg); background: rgba(255, 224, 179, .35); }
-    .petal:nth-child(6) { transform: translate(-30px, 30px) rotate(226deg); background: rgba(184, 217, 195, .34); }
-
-    .target {
-      width: 122px;
-      height: 122px;
-      border-radius: 50%;
-      background: linear-gradient(145deg, #fff, #fff8f6);
-      border: 1px solid var(--line);
-      box-shadow: 0 18px 30px rgba(205, 145, 150, .18);
-      display: grid;
-      place-items: center;
-      text-align: center;
-      position: relative;
-      z-index: 2;
-    }
-
-    .target small {
-      display: block;
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: -7px;
-    }
-
-    .target b {
-      font-size: 50px;
-      line-height: 1;
-    }
-
-    .chips {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin: 6px 0 18px;
-      min-height: 120px;
-      padding: 8px;
-      border-radius: 24px;
-      transition: .16s ease;
-    }
-
-    .chips.active {
-      background: rgba(255, 255, 255, .55);
-      outline: 1px dashed #d8cbc3;
-    }
-
-    .chip {
-      width: 76px;
-      height: 58px;
-      border-radius: 20px;
-      border: 1px solid var(--line);
-      background: var(--card);
-      display: grid;
-      place-items: center;
-      font-size: 24px;
-      font-weight: 800;
-      cursor: grab;
-      user-select: none;
-      box-shadow: 0 9px 18px rgba(72, 52, 40, .08);
-      transition: transform .14s ease, box-shadow .14s ease, opacity .14s ease, background .14s ease;
-      touch-action: none;
-    }
-
-    .chip:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 14px 22px rgba(72, 52, 40, .12);
-    }
-
-    .chip.dragging {
-      opacity: .45;
-      transform: scale(.96);
-    }
-
-    .chip.correct {
-      background: #e4f0e7;
-    }
-
-    .chip.wrong {
-      background: #ffe1dc;
-    }
-
-    .zones {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      position: relative;
-      z-index: 2;
-    }
-
-    .zone {
-      min-height: 190px;
-      border-radius: var(--radius);
-      border: 1.5px dashed #d8cbc3;
-      background: rgba(255, 255, 255, .65);
-      padding: 12px;
-      transition: .16s ease;
-    }
-
-    .zone.active {
-      background: #fff;
-      transform: translateY(-3px);
-      border-color: var(--accent);
-    }
-
-    .zone h2 {
-      margin: 0 0 4px;
-      font-size: 18px;
-      letter-spacing: -0.02em;
-    }
-
-    .zone p {
-      margin: 0 0 10px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .zone .placed {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-content: flex-start;
-      min-height: 112px;
-    }
-
-    @keyframes pop {
-      from { transform: scale(.82); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
-    }
-
-    .chip.placed-chip {
-      width: 54px;
-      height: 40px;
-      border-radius: 15px;
-      font-size: 18px;
-      animation: pop .2s ease;
-      box-shadow: none;
-    }
-
-    aside {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 30px;
-      padding: 18px;
-      box-shadow: 0 10px 24px rgba(72, 52, 40, .07);
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .status {
-      min-height: 96px;
-      border-radius: 24px;
-      background: #fbf7f3;
-      padding: 15px;
-      display: grid;
-      align-content: center;
-    }
-
-    .status b {
-      font-size: 20px;
-      display: block;
-      margin-bottom: 5px;
-    }
-
-    .status span {
-      color: var(--muted);
-      line-height: 1.35;
-    }
-
-    .progress {
-      height: 12px;
-      border-radius: 999px;
-      background: #f0e7e1;
-      overflow: hidden;
-    }
-
-    .progress div {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, var(--accent), var(--accent-2));
-      transition: width .25s ease;
-    }
-
-    button {
-      border: 0;
-      border-radius: 999px;
-      padding: 14px 16px;
-      font-weight: 800;
-      font-size: 15px;
-      cursor: pointer;
-      color: var(--text);
-      background: #f2dfdf;
-      transition: transform .14s ease, opacity .14s ease;
-    }
-
-    button:hover {
-      transform: translateY(-2px);
-    }
-
-    button.secondary {
-      background: #e4f0e7;
-    }
-
-    button:disabled {
-      opacity: .45;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .game-footer {
-      display: flex;
-      justify-content: center;
-      padding-top: 18px;
-    }
-
-    .subscribe-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      text-align: center;
-      text-decoration: none;
-      border-radius: 999px;
-      padding: 14px 22px;
-      font-weight: 800;
-      font-size: 15px;
-      color: #ffffff;
-      background: #2AABEE;
-      box-shadow: 0 12px 24px rgba(42, 171, 238, .26);
-      transition: transform .14s ease, box-shadow .14s ease, background .14s ease;
-    }
-
-    .subscribe-btn:hover {
-      transform: translateY(-2px);
-      background: #229ED9;
-      box-shadow: 0 16px 28px rgba(42, 171, 238, .32);
-    }
-
-    .telegram-icon {
-      width: 21px;
-      height: 21px;
-      fill: currentColor;
-      flex: 0 0 auto;
-    }
-
-    .result {
-      display: none;
-      text-align: center;
-      padding: 30px 10px 8px;
-    }
-
-    .result.show {
-      display: block;
-    }
-
-    .result h2 {
-      font-size: 34px;
-      margin: 0 0 8px;
-      letter-spacing: -0.04em;
-    }
-
-    .spark {
-      position: absolute;
-      pointer-events: none;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--accent);
-      animation: fly .55s ease forwards;
-    }
-
-    @keyframes fly {
-      to {
-        transform: translate(var(--x), var(--y)) scale(.1);
-        opacity: 0;
-      }
-    }
-
-    @media (max-width: 1080px) {
-      body {
-        align-items: flex-start;
-      }
-
-      .game {
-        width: min(980px, 100%);
-      }
-
-      .main {
-        grid-template-columns: 1fr 270px;
-      }
-
-      .chip {
-        width: 70px;
-        height: 54px;
-        font-size: 22px;
-      }
-
-      .zone {
-        min-height: 176px;
-      }
-    }
-
-    @media (max-width: 920px) {
-      body {
-        padding: 16px;
-      }
-
-      .main {
-        grid-template-columns: 1fr;
-      }
-
-      aside {
-        order: -1;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        align-items: stretch;
-      }
-
-      .status {
-        grid-column: 1 / -1;
-      }
-
-      aside .progress {
-        grid-column: 1 / -1;
-      }
-
-      .zones {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      header {
-        align-items: flex-start;
-        flex-direction: column;
-      }
-
-      .stats {
-        justify-content: flex-start;
-        width: 100%;
-      }
-
-      .pill {
-        min-width: 0;
-        flex: 1 1 120px;
-      }
-
-      .game-footer {
-        padding-top: 16px;
-      }
-    }
-
-    @media (max-width: 700px) {
-      .game {
-        padding: 16px;
-        border-radius: 26px;
-      }
-
-      .board,
-      aside {
-        border-radius: 24px;
-      }
-
-      .board {
-        min-height: auto;
-        padding: 14px;
-      }
-
-      .target-wrap {
-        min-height: 112px;
-      }
-
-      .target-flower {
-        width: 132px;
-        height: 132px;
-      }
-
-      .petal {
-        width: 70px;
-        height: 70px;
-      }
-
-      .petal:nth-child(1) { transform: translateY(-35px) rotate(8deg); }
-      .petal:nth-child(2) { transform: translateX(35px) rotate(82deg); }
-      .petal:nth-child(3) { transform: translateY(35px) rotate(172deg); }
-      .petal:nth-child(4) { transform: translateX(-35px) rotate(262deg); }
-      .petal:nth-child(5) { transform: translate(25px, -25px) rotate(46deg); }
-      .petal:nth-child(6) { transform: translate(-25px, 25px) rotate(226deg); }
-
-      .target {
-        width: 104px;
-        height: 104px;
-      }
-
-      .target b {
-        font-size: 42px;
-      }
-
-      .chips {
-        min-height: 100px;
-        gap: 8px;
-      }
-
-      .chip {
-        width: 62px;
-        height: 48px;
-        border-radius: 17px;
-        font-size: 20px;
-      }
-
-      .chip.placed-chip {
-        width: 50px;
-        height: 38px;
-        border-radius: 14px;
-        font-size: 17px;
-      }
-
-      .zone {
-        min-height: 165px;
-        padding: 11px;
-      }
-
-      .zone h2 {
-        font-size: 17px;
-      }
-
-      .zone p {
-        font-size: 12px;
-      }
-    }
-
-    @media (max-width: 560px) {
-      body {
-        padding: 10px;
-      }
-
-      .game {
-        padding: 12px;
-        border-radius: 22px;
-      }
-
-      .title h1 {
-        font-size: 28px;
-      }
-
-      .title p {
-        font-size: 14px;
-      }
-
-      .stats {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
-      }
-
-      .pill {
-        padding: 9px 10px;
-        font-size: 14px;
-      }
-
-      .big-timer {
-        width: 100%;
-        min-width: 0;
-        padding: 12px 18px;
-        border-radius: 24px;
-      }
-
-      .big-timer .timer-label {
-        font-size: 11px;
-      }
-
-      aside {
-        grid-template-columns: 1fr;
-        padding: 14px;
-        gap: 10px;
-      }
-
-      .status {
-        min-height: 82px;
-        padding: 13px;
-      }
-
-      .status b {
-        font-size: 18px;
-      }
-
-      button,
-      .subscribe-btn {
-        width: 100%;
-        padding: 13px 14px;
-        font-size: 14px;
-      }
-
-      .game-footer {
-        padding-top: 12px;
-      }
-
-      .zones {
-        grid-template-columns: 1fr;
-        gap: 10px;
-      }
-
-      .zone {
-        min-height: 128px;
-      }
-
-      .zone .placed {
-        min-height: 64px;
-      }
-    }
-
-    @media (max-width: 380px) {
-      .title h1 {
-        font-size: 25px;
-      }
-
-      .stats {
-        grid-template-columns: 1fr;
-      }
-
-      .target-wrap {
-        min-height: 122px;
-      }
-
-      .target-flower {
-        transform: scale(.9);
-      }
-
-      .chips {
-        gap: 7px;
-      }
-
-      .chip {
-        width: 56px;
-        height: 44px;
-        border-radius: 15px;
-        font-size: 18px;
-      }
-
-      .chip.placed-chip {
-        width: 48px;
-        height: 36px;
-        font-size: 16px;
-      }
-
-      .zone {
-        border-radius: 20px;
-      }
-    }
-
-    @media (hover: none) and (pointer: coarse) {
-      .chip:hover,
-      button:hover,
-      .subscribe-btn:hover {
-        transform: none;
-      }
-
-      .chip {
-        cursor: pointer;
-      }
-
-      .zone.active {
-        transform: none;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Числовой диктор</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&family=Nunito:wght@600;700;800;900&display=swap');
+
+*{box-sizing:border-box; font-family:"Comfortaa",sans-serif;}
+body{
+ margin:0;
+ min-height:100vh;
+ padding:20px;
+ font-family:"Comfortaa",sans-serif;
+ color:#35313a;
+ background:
+ radial-gradient(circle at 10% 10%,#ffdcca 0 8%,transparent 9%),
+ radial-gradient(circle at 90% 15%,#ffe8b8 0 8%,transparent 9%),
+ linear-gradient(135deg,#fffaf6,#fff1e8);
+}
+.wrapper{max-width:1000px;margin:auto}
+.header{text-align:center;margin-bottom:25px}
+h1{
+ font-family:"Comfortaa",sans-serif;
+ font-size:clamp(34px,5vw,58px);
+ margin:0;
+ letter-spacing:-1px;
+}
+.subtitle{
+ color:#777;
+ font-size:18px;
+ margin-top:8px;
+}
+.card{
+ background:rgba(255,255,255,.9);
+ backdrop-filter:blur(10px);
+ border-radius:34px;
+ padding:clamp(20px,5vw,45px);
+ box-shadow:0 20px 60px rgba(80,50,30,.12);
+ border:1px solid white;
+}
+.top{
+ display:flex;
+ justify-content:space-between;
+ gap:10px;
+ flex-wrap:wrap;
+}
+.badge{
+ background:#fff0e8;
+ padding:10px 18px;
+ border-radius:30px;
+ font-weight:800;
+ color:#ff7654;
+}
+.progress{
+ height:10px;
+ background:#f2ebe5;
+ border-radius:20px;
+ overflow:hidden;
+ margin:25px 0;
+}
+.progress div{
+ width:45%;
+ height:100%;
+ background:linear-gradient(90deg,#ff7654,#ffb067);
+}
+.number{
+ text-align:center;
+ font-size:clamp(50px,10vw,100px);
+ font-weight:900;
+ margin:25px 0;
+ letter-spacing:-4px;
+}
+.answers{
+ display:grid;
+ grid-template-columns:repeat(2,1fr);
+ gap:16px;
+}
+.answer{
+ min-height:80px;
+ background:#fff9f5;
+ border:2px solid #f3e5dc;
+ color:#38333a;
+ border-radius:22px;
+ padding:15px;
+ font-size:18px;
+ font-weight:700;
+ cursor:pointer;
+ transition:.2s;
+}
+.answer:hover{
+ transform:translateY(-3px);
+ border-color:#ffb39b;
+ box-shadow:0 10px 25px #ffb39b40;
+}
+.main-btn{
+ width:100%;
+ margin-top:22px;
+ padding:18px;
+ border:0;
+ border-radius:22px;
+ background:linear-gradient(135deg,#ff7654,#ffb067);
+ color:white;
+ font-size:20px;
+ font-weight:900;
+}
+.subscribe{
+ margin-top:30px;
+ padding:24px;
+ text-align:center;
+ border-radius:28px;
+ background:#fff4ec;
+}
+.subscribe-title{
+ font-size:18px;
+ font-weight:800;
+}
+.subscribe a{
+ display:inline-block;
+ margin-top:14px;
+ padding:15px 30px;
+ border-radius:999px;
+ background:#ff7654;
+ color:white;
+ text-decoration:none;
+ font-weight:900;
+}
+@media(max-width:700px){
+ body{padding:10px}
+ .answers{grid-template-columns:1fr}
+ .card{border-radius:24px}
+ .number{letter-spacing:-1px}
+}
+</style>
 </head>
 <body>
-  <div class="game">
-    <header>
-      <div class="title">
-        <h1>Делители и кратные</h1>
-        <p>Разложи числа по зонам.</p>
-      </div>
-      <div class="stats">
-        <div class="pill">Раунд <span id="round">1</span>/5</div>
-        <div class="pill">⭐ <span id="score">0</span></div>
-        <div class="pill">🔥 <span id="streak">0</span></div>
-      </div>
-    </header>
-
-    <div class="main">
-      <section class="board" id="board">
-        <div class="big-timer-wrap">
-          <div class="big-timer timer" id="timer">
-            <span class="timer-label">Время раунда</span>
-            <strong>05:00</strong>
-          </div>
-        </div>
-
-        <div class="target-wrap">
-          <div class="target-flower">
-            <div class="petal"></div>
-            <div class="petal"></div>
-            <div class="petal"></div>
-            <div class="petal"></div>
-            <div class="petal"></div>
-            <div class="petal"></div>
-            <div class="target">
-              <div>
-                <small>число</small>
-                <b id="targetNumber">24</b>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="chips" id="chips"></div>
-
-        <div class="zones">
-          <div class="zone" data-zone="divisor">
-            <h2>делитель</h2>
-            <p>делит число</p>
-            <div class="placed"></div>
-          </div>
-
-          <div class="zone" data-zone="multiple">
-            <h2>кратное</h2>
-            <p>делится на число</p>
-            <div class="placed"></div>
-          </div>
-
-          <div class="zone" data-zone="both">
-            <h2>оба</h2>
-            <p>и делитель, и кратное</p>
-            <div class="placed"></div>
-          </div>
-
-          <div class="zone" data-zone="none">
-            <h2>мимо</h2>
-            <p>не подходит</p>
-            <div class="placed"></div>
-          </div>
-        </div>
-      </section>
-
-      <aside>
-        <div class="status" id="status">
-          <b>Задача</b>
-          <span>Разложи все карточки по зонам.</span>
-        </div>
-
-        <div>
-          <div class="progress">
-            <div id="progress"></div>
-          </div>
-        </div>
-
-        <button id="checkBtn">Проверить</button>
-        <button class="secondary" id="nextBtn" disabled>Следующий раунд</button>
-        <button class="secondary" id="restartBtn">Начать заново</button>
-
-
-
-        <div class="result" id="result">
-          <h2 id="finalTitle">Готово!</h2>
-          <p id="finalText"></p>
-        </div>
-      </aside>
-    </div>
-
-    <footer class="game-footer">
-      <a class="subscribe-btn" href="https://t.me/lera_easy_math" target="_blank" rel="noopener noreferrer" aria-label="Подписаться на Telegram-канал автора">
-        <svg class="telegram-icon" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M21.8 4.4 18.7 19c-.2 1.1-.9 1.4-1.8.9l-5-3.7-2.4 2.3c-.3.3-.5.5-1 .5l.4-5.1 9.3-8.4c.4-.4-.1-.6-.6-.2L6.1 12.5 1.1 11c-1.1-.3-1.1-1.1.2-1.6L20.6 2c.9-.3 1.6.2 1.2 2.4Z"/>
-        </svg>
-        <span>Подписаться на канал автора</span>
-      </a>
-    </footer>
-  </div>
-
-  <script>
-    const ROUND_COUNT = 5;
-    const ROUND_TIME = 5 * 60;
-
-    const chipsBox = document.getElementById("chips");
-    const zones = [...document.querySelectorAll(".zone")];
-    const targetNumber = document.getElementById("targetNumber");
-    const roundEl = document.getElementById("round");
-    const timerEl = document.getElementById("timer");
-    const scoreEl = document.getElementById("score");
-    const streakEl = document.getElementById("streak");
-    const statusEl = document.getElementById("status");
-    const progressEl = document.getElementById("progress");
-    const checkBtn = document.getElementById("checkBtn");
-    const nextBtn = document.getElementById("nextBtn");
-    const restartBtn = document.getElementById("restartBtn");
-    const result = document.getElementById("result");
-    const finalTitle = document.getElementById("finalTitle");
-    const finalText = document.getElementById("finalText");
-    const board = document.getElementById("board");
-
-    let rounds = [];
-    let current = 0;
-    let score = 0;
-    let streak = 0;
-    let placed = {};
-    let locked = false;
-    let secondsLeft = ROUND_TIME;
-    let timerId = null;
-
-    function rand(min, max) {
-      return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-
-    function shuffle(arr) {
-      return [...arr].sort(() => Math.random() - 0.5);
-    }
-
-    function unique(arr) {
-      return [...new Set(arr)];
-    }
-
-    function divisorsOf(n) {
-      const result = [];
-      for (let i = 1; i <= n; i++) {
-        if (n % i === 0) result.push(i);
-      }
-      return result;
-    }
-
-    function answerFor(target, n) {
-      const isDivisor = target % n === 0;
-      const isMultiple = n % target === 0;
-
-      if (isDivisor && isMultiple) return "both";
-      if (isDivisor) return "divisor";
-      if (isMultiple) return "multiple";
-      return "none";
-    }
-
-    function generateRound() {
-      const targets = [12, 15, 16, 18, 20, 21, 24, 25, 27, 28, 30, 32, 36, 40, 42, 45, 48, 50, 54, 60];
-      const target = targets[rand(0, targets.length - 1)];
-
-      const divisors = shuffle(divisorsOf(target).filter(n => n !== target)).slice(0, 5);
-      const multiples = unique([
-        target * 2,
-        target * 3,
-        target * rand(4, 6),
-        target * rand(7, 9)
-      ]).slice(0, 4);
-
-      const nums = unique([...divisors, target, ...multiples]);
-
-      while (nums.length < 12) {
-        const n = rand(2, 130);
-        if (n !== target && answerFor(target, n) === "none" && !nums.includes(n)) {
-          nums.push(n);
-        }
-      }
-
-      return {
-        target,
-        nums: shuffle(nums).slice(0, 12)
-      };
-    }
-
-    function generateGame() {
-      rounds = [];
-      const usedTargets = new Set();
-
-      while (rounds.length < ROUND_COUNT) {
-        const round = generateRound();
-
-        if (!usedTargets.has(round.target)) {
-          usedTargets.add(round.target);
-          rounds.push(round);
-        }
-      }
-    }
-
-    function setStatus(title, text) {
-      statusEl.innerHTML = `<b>${title}</b><span>${text}</span>`;
-    }
-
-    function formatTime(seconds) {
-      const m = String(Math.floor(seconds / 60)).padStart(2, "0");
-      const s = String(seconds % 60).padStart(2, "0");
-      return `${m}:${s}`;
-    }
-
-    function startTimer() {
-      clearInterval(timerId);
-      secondsLeft = ROUND_TIME;
-      timerEl.querySelector("strong").textContent = formatTime(secondsLeft);
-      timerEl.classList.remove("warning", "danger");
-
-      timerId = setInterval(() => {
-        if (locked) return;
-
-        secondsLeft--;
-        timerEl.querySelector("strong").textContent = formatTime(secondsLeft);
-
-        timerEl.classList.toggle("warning", secondsLeft <= 60 && secondsLeft > 20);
-        timerEl.classList.toggle("danger", secondsLeft <= 20);
-
-        if (secondsLeft <= 0) {
-          clearInterval(timerId);
-          timeIsUp();
-        }
-      }, 1000);
-    }
-
-    function timeIsUp() {
-      locked = true;
-      streak = 0;
-      streakEl.textContent = streak;
-      setStatus("Время вышло", "Раунд завершён. Можно посмотреть ошибки и перейти дальше.");
-      revealAnswersByTime();
-      checkBtn.disabled = true;
-      nextBtn.disabled = false;
-
-      if (current === rounds.length - 1) {
-        nextBtn.textContent = "Финиш";
-      }
-    }
-
-    function revealAnswersByTime() {
-      const round = rounds[current];
-
-      round.nums.forEach(n => {
-        const user = placed[n];
-        const right = answerFor(round.target, n);
-
-        if (!user) return;
-
-        const chip = document.querySelector(`.chip[data-value="${n}"]`);
-        if (!chip) return;
-
-        if (user === right) {
-          chip.classList.add("correct");
-        } else {
-          chip.classList.add("wrong");
-          chip.title = "Верно: " + label(right);
-        }
-      });
-    }
-
-    function renderRound() {
-      clearInterval(timerId);
-      locked = false;
-      placed = {};
-      const round = rounds[current];
-
-      targetNumber.textContent = round.target;
-      roundEl.textContent = current + 1;
-      scoreEl.textContent = score;
-      streakEl.textContent = streak;
-      progressEl.style.width = "0%";
-      result.classList.remove("show");
-
-      chipsBox.innerHTML = "";
-      zones.forEach(zone => {
-        zone.querySelector(".placed").innerHTML = "";
-        zone.classList.remove("active");
-      });
-
-      round.nums.forEach(n => {
-        const chip = createChip(n, false);
-        chipsBox.appendChild(chip);
-      });
-
-      checkBtn.disabled = false;
-      nextBtn.disabled = true;
-      setStatus("Раунд " + (current + 1), "Разложи карточки для числа " + round.target + ".");
-      startTimer();
-    }
-
-    function createChip(value, isPlaced) {
-      const chip = document.createElement("div");
-      chip.className = isPlaced ? "chip placed-chip" : "chip";
-      chip.textContent = value;
-      chip.draggable = true;
-      chip.dataset.value = value;
-
-      chip.addEventListener("dragstart", e => {
-        if (locked) return e.preventDefault();
-        chip.classList.add("dragging");
-        e.dataTransfer.setData("text/plain", value);
-      });
-
-      chip.addEventListener("dragend", () => chip.classList.remove("dragging"));
-
-      chip.addEventListener("click", () => {
-        if (locked) return;
-
-        if (chip.classList.contains("placed-chip")) {
-          moveBackToPool(value, chip);
-          return;
-        }
-
-        const activeZone = zones.find(z => z.classList.contains("active"));
-        if (!activeZone) {
-          setStatus("Клик-режим", "Сначала наведи мышкой на зону или просто перетащи карточку.");
-          return;
-        }
-        placeChip(value, activeZone.dataset.zone, chip);
-      });
-
-      return chip;
-    }
-
-    function getDraggedChip(value) {
-      return [...document.querySelectorAll(`.chip[data-value="${value}"]`)].find(chip => !chip.classList.contains("dragging") || chip.dataset.value == value)
-        || document.querySelector(`.chip[data-value="${value}"]`);
-    }
-
-    zones.forEach(zone => {
-      zone.addEventListener("dragover", e => {
-        e.preventDefault();
-        if (!locked) zone.classList.add("active");
-      });
-
-      zone.addEventListener("dragleave", () => zone.classList.remove("active"));
-
-      zone.addEventListener("drop", e => {
-        e.preventDefault();
-        if (locked) return;
-        zone.classList.remove("active");
-        const value = Number(e.dataTransfer.getData("text/plain"));
-        const chip = document.querySelector(`.chip.dragging[data-value="${value}"]`) || document.querySelector(`.chip[data-value="${value}"]`);
-        placeChip(value, zone.dataset.zone, chip);
-      });
-
-      zone.addEventListener("mouseenter", () => {
-        if (!locked) zone.classList.add("active");
-      });
-
-      zone.addEventListener("mouseleave", () => zone.classList.remove("active"));
-    });
-
-    chipsBox.addEventListener("dragover", e => {
-      e.preventDefault();
-      if (!locked) chipsBox.classList.add("active");
-    });
-
-    chipsBox.addEventListener("dragleave", () => chipsBox.classList.remove("active"));
-
-    chipsBox.addEventListener("drop", e => {
-      e.preventDefault();
-      if (locked) return;
-      chipsBox.classList.remove("active");
-      const value = Number(e.dataTransfer.getData("text/plain"));
-      const chip = document.querySelector(`.chip.dragging[data-value="${value}"]`) || document.querySelector(`.chip[data-value="${value}"]`);
-      moveBackToPool(value, chip);
-    });
-
-    function placeChip(value, zoneName, chip) {
-      if (!chip) return;
-
-      placed[value] = zoneName;
-      chip.classList.add("placed-chip");
-      chip.classList.remove("correct", "wrong");
-      chip.title = "";
-
-      document.querySelector(`[data-zone="${zoneName}"] .placed`).appendChild(chip);
-      updateProgress();
-
-      const total = rounds[current].nums.length;
-      const done = Object.keys(placed).length;
-
-      if (done === total) {
-        setStatus("Все разложено", "Теперь жми «Проверить».");
-      }
-    }
-
-    function moveBackToPool(value, chip) {
-      if (!chip) return;
-
-      delete placed[value];
-      chip.classList.remove("placed-chip", "correct", "wrong");
-      chip.title = "";
-      chipsBox.appendChild(chip);
-      updateProgress();
-      setStatus("Карточка возвращена", "Можно переложить её в другую зону.");
-    }
-
-    function updateProgress() {
-      const total = rounds[current].nums.length;
-      const done = Object.keys(placed).length;
-      progressEl.style.width = Math.round(done / total * 100) + "%";
-    }
-
-    function makeSparkles() {
-      for (let i = 0; i < 22; i++) {
-        const spark = document.createElement("div");
-        spark.className = "spark";
-        spark.style.left = "50%";
-        spark.style.top = "28%";
-        spark.style.setProperty("--x", (Math.random() * 340 - 170) + "px");
-        spark.style.setProperty("--y", (Math.random() * 260 - 130) + "px");
-        board.appendChild(spark);
-        setTimeout(() => spark.remove(), 650);
-      }
-    }
-
-    checkBtn.addEventListener("click", () => {
-      const round = rounds[current];
-
-      if (Object.keys(placed).length < round.nums.length) {
-        setStatus("Не все карточки", "Осталось распределить еще " + (round.nums.length - Object.keys(placed).length) + ".");
-        return;
-      }
-
-      clearInterval(timerId);
-      locked = true;
-      let correct = 0;
-
-      round.nums.forEach(n => {
-        const right = answerFor(round.target, n);
-        const user = placed[n];
-        const chip = document.querySelector(`.chip[data-value="${n}"]`);
-
-        if (user === right) {
-          correct++;
-          chip.classList.add("correct");
-        } else {
-          chip.classList.add("wrong");
-          chip.title = "Верно: " + label(right);
-        }
-      });
-
-      score += correct;
-
-      if (correct === round.nums.length) {
-        streak++;
-        makeSparkles();
-        setStatus("Идеально!", "Все " + correct + " из " + round.nums.length + ". Числа довольны, учитель тоже.");
-      } else {
-        streak = 0;
-        setStatus("Есть промахи", "Верно: " + correct + " из " + round.nums.length + ". Наведи на красные карточки: в подсказке правильная зона.");
-      }
-
-      scoreEl.textContent = score;
-      streakEl.textContent = streak;
-      checkBtn.disabled = true;
-      nextBtn.disabled = false;
-
-      if (current === rounds.length - 1) {
-        nextBtn.textContent = "Финиш";
-      }
-    });
-
-    nextBtn.addEventListener("click", () => {
-      if (current < rounds.length - 1) {
-        current++;
-        renderRound();
-      } else {
-        finishGame();
-      }
-    });
-
-    restartBtn.addEventListener("click", () => {
-      clearInterval(timerId);
-      generateGame();
-      current = 0;
-      score = 0;
-      streak = 0;
-      nextBtn.textContent = "Следующий раунд";
-      renderRound();
-    });
-
-    function finishGame() {
-      clearInterval(timerId);
-      const max = rounds.reduce((sum, r) => sum + r.nums.length, 0);
-      const percent = Math.round(score / max * 100);
-
-      result.classList.add("show");
-      finalTitle.textContent = percent >= 85 ? "Отлично!" : percent >= 60 ? "Хороший результат" : "Нужно повторить";
-      finalText.textContent = "Результат: " + score + " из " + max + " (" + percent + "%).";
-      setStatus("Игра окончена", percent >= 85 ? "Можно усложнять: брать больше чисел и меньше времени." : "Повтори разницу: делитель делит число, кратное делится на число.");
-      checkBtn.disabled = true;
-      nextBtn.disabled = true;
-    }
-
-    function label(zone) {
-      return {
-        divisor: "делитель",
-        multiple: "кратное",
-        both: "оба",
-        none: "мимо"
-      }[zone];
-    }
-
-
-    let touchDrag = null;
-
-    document.addEventListener("pointerdown", e => {
-      const chip = e.target.closest(".chip");
-      if (!chip || locked) return;
-
-      if (e.pointerType === "mouse") return;
-
-      e.preventDefault();
-
-      const rect = chip.getBoundingClientRect();
-      touchDrag = {
-        chip,
-        value: Number(chip.dataset.value),
-        offsetX: e.clientX - rect.left,
-        offsetY: e.clientY - rect.top,
-        originalParent: chip.parentElement
-      };
-
-      chip.setPointerCapture(e.pointerId);
-      chip.classList.add("dragging");
-      chip.style.position = "fixed";
-      chip.style.left = rect.left + "px";
-      chip.style.top = rect.top + "px";
-      chip.style.zIndex = "1000";
-      chip.style.width = rect.width + "px";
-      chip.style.height = rect.height + "px";
-      chip.style.pointerEvents = "none";
-    });
-
-    document.addEventListener("pointermove", e => {
-      if (!touchDrag) return;
-
-      e.preventDefault();
-
-      touchDrag.chip.style.left = (e.clientX - touchDrag.offsetX) + "px";
-      touchDrag.chip.style.top = (e.clientY - touchDrag.offsetY) + "px";
-
-      [...zones, chipsBox].forEach(el => el.classList.remove("active"));
-
-      const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
-      const zone = elementBelow?.closest?.(".zone");
-      const pool = elementBelow?.closest?.("#chips");
-
-      if (zone) zone.classList.add("active");
-      if (pool) chipsBox.classList.add("active");
-    });
-
-    document.addEventListener("pointerup", e => {
-      if (!touchDrag) return;
-
-      const { chip, value } = touchDrag;
-
-      chip.style.pointerEvents = "";
-      const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
-      const zone = elementBelow?.closest?.(".zone");
-      const pool = elementBelow?.closest?.("#chips");
-
-      chip.classList.remove("dragging");
-      chip.style.position = "";
-      chip.style.left = "";
-      chip.style.top = "";
-      chip.style.zIndex = "";
-      chip.style.width = "";
-      chip.style.height = "";
-      chip.style.pointerEvents = "";
-
-      [...zones, chipsBox].forEach(el => el.classList.remove("active"));
-
-      if (zone) {
-        placeChip(value, zone.dataset.zone, chip);
-      } else if (pool) {
-        moveBackToPool(value, chip);
-      }
-
-      touchDrag = null;
-    });
-
-        generateGame();
-    renderRound();
-  </script>
+<div class="wrapper">
+<div class="header">
+<h1>Числовой диктор</h1>
+<div class="subtitle">Учимся правильно читать и называть числа</div>
+</div>
+
+<div class="card">
+<div class="top">
+
+<div class="badge">Раунд 5/12</div>
+</div>
+
+<div class="progress"><div></div></div>
+
+<div class="number">2 405</div>
+
+<div class="answers">
+<button class="answer">две тысячи четыреста пять</button>
+<button class="answer">два тысяча четыреста пять</button>
+<button class="answer">две тысячи четыреста пятьдесят</button>
+<button class="answer">двести сорок пять</button>
+</div>
+
+<button class="main-btn">Следующее число →</button>
+
+<div class="subscribe">
+<div class="subscribe-title">🎓 Больше интерактивных заданий по математике</div>
+<a href="https://t.me/lera_easy_math" target="_blank">Подписаться на канал автора</a>
+</div>
+</div>
+</div>
 </body>
 </html>
