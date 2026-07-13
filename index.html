@@ -2,142 +2,138 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Числовой диктор</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@500;600;700&display=swap');
-*{box-sizing:border-box;font-family:'Comfortaa',sans-serif}
-body{margin:0;padding:16px;min-height:100vh;background:linear-gradient(135deg,#fffaf6,#fff0e8);color:#38343b}
-.container{max-width:900px;margin:auto}
-.header{text-align:center;margin-bottom:20px}
-h1{font-size:clamp(32px,6vw,55px);color:#ff7654;margin:0}
-.subtitle{color:#777;margin-top:8px}
-.card{background:white;border-radius:32px;padding:clamp(18px,4vw,40px);box-shadow:0 20px 50px #0002}
-.info{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.badge{background:#fff1e8;color:#ff7654;padding:10px 16px;border-radius:30px;font-weight:700}
-.progress{height:10px;background:#f1e8e1;border-radius:20px;margin:25px 0;overflow:hidden}
-.progress div{height:100%;background:#ff7654;transition:.3s}
-.number{text-align:center;font-size:clamp(45px,10vw,90px);font-weight:700;margin:25px 0}
-.answers{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}
-button{cursor:pointer;border-radius:20px;padding:16px;font-size:17px;font-weight:700}
-.answer{background:#fff8f4;border:2px solid #f3e3da;min-height:75px}
-.answer:hover{transform:translateY(-2px)}
-.correct{background:#e8f8ee!important;border-color:#63bf8b!important}
-.wrong{background:#fff0f0!important;border-color:#ed9299!important}
-.primary{width:100%;margin-top:20px;background:#ff7654;color:white;border:0}
-.result{text-align:center;padding:30px}
-@media(max-width:650px){.answers{grid-template-columns:1fr}}
+*{box-sizing:border-box;font-family:Comfortaa,sans-serif}
+body{
+margin:0;padding:20px;min-height:100vh;color:#40363a;
+background:
+radial-gradient(circle at 8% 12%, #ffd9c8 0 70px, transparent 71px),
+radial-gradient(circle at 92% 18%, #ffe6b8 0 60px, transparent 61px),
+radial-gradient(circle at 85% 85%, #ffd8e0 0 90px, transparent 91px),
+radial-gradient(circle at 12% 80%, #ffe8cf 0 55px, transparent 56px),
+linear-gradient(135deg,#fff9f4,#ffece2);
+}
+.app{max-width:900px;margin:auto}
+.header{text-align:center;margin-bottom:25px}
+h1{font-size:clamp(34px,6vw,56px);color:#ff7654;margin:0}
+.subtitle{color:#888;margin-top:10px}
+.card{
+background:#fff;border-radius:35px;padding:35px;
+box-shadow:0 20px 50px rgba(80,40,20,.12)
+}
+.top{display:flex;justify-content:space-between;gap:10px}
+.badge{
+background:#fff1e8;color:#ff7654;padding:10px 18px;border-radius:30px;font-weight:700
+}
+.progress{height:10px;background:#f2e7df;border-radius:20px;margin:25px 0;overflow:hidden}
+.progress div{height:100%;background:#ff7654}
+.number{text-align:center;font-size:clamp(45px,10vw,90px);font-weight:700;margin:30px}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+button{
+border-radius:22px;padding:16px;border:2px solid #f2dfd5;
+background:#fff8f3;font-size:17px;font-weight:700;cursor:pointer
+}
+button:hover{transform:translateY(-2px)}
+.correct{background:#e8f8ee!important;border-color:#68c38c!important}
+.wrong{background:#fff0f0!important;border-color:#ef9299!important}
+.next,.subscribe a{
+display:inline-block;
+margin-top:14px;
+background:#f2a65a;
+color:#fff;
+padding:10px 22px;
+width:auto;
+border-radius:25px;
+font-size:14px;
+text-align:center;
+text-decoration:none
+}
+.subscribe{
+margin-top:30px;background:#fff3eb;border-radius:25px;padding:25px;text-align:center;font-weight:700
+}
+.subscribe a{
+padding:10px 22px;
+border-radius:25px
+}
+.result{text-align:center}
+@media(max-width:650px){.answers{grid-template-columns:1fr}.card{padding:20px}}
 </style>
 </head>
 <body>
-<div class="container">
+<div class="app">
 <div class="header">
 <h1>Числовой диктор</h1>
 <div class="subtitle">Учимся правильно читать и называть числа</div>
 </div>
-
-<div class="card">
-<div class="info">
+<div class="card" id="card">
+<div class="top">
 <div class="badge">Раунд <span id="round">1</span>/12</div>
 <div class="badge">⭐ <span id="score">0</span>/120</div>
 </div>
 <div class="progress"><div id="bar"></div></div>
 <div class="number" id="number"></div>
 <div class="answers" id="answers"></div>
-<button class="primary" id="next">Следующее число →</button>
+<button class="next" id="next">Следующее число →</button>
+<div class="subscribe">
+🎓 Больше интерактивных заданий по математике
+<a href="https://t.me/lera_easy_math" target="_blank">Подписаться на канал автора</a>
 </div>
 </div>
-
+</div>
 <script>
+let round=1,score=0,answered=false,correct="";
 const ones=["","один","два","три","четыре","пять","шесть","семь","восемь","девять"];
-const onesF=["","одна","две","три","четыре","пять","шесть","семь","восемь","девять"];
-const teens=["десять","одиннадцать","двенадцать","тринадцать","четырнадцать","пятнадцать","шестнадцать","семнадцать","восемнадцать","девятнадцать"];
 const tens=["","","двадцать","тридцать","сорок","пятьдесят","шестьдесят","семьдесят","восемьдесят","девяносто"];
-const hundreds=["","сто","двести","триста","четыреста","пятьсот","шестьсот","семьсот","восемьсот","девятьсот"];
-
-function triad(n,f=false){
- let r=[];
- let h=Math.floor(n/100), x=n%100;
- if(h)r.push(hundreds[h]);
- if(x>=10&&x<20) r.push(teens[x-10]);
- else{
-  if(Math.floor(x/10))r.push(tens[Math.floor(x/10)]);
-  if(x%10)r.push((f?onesF:ones)[x%10]);
- }
- return r.join(" ");
+const huns=["","сто","двести","триста","четыреста","пятьсот","шестьсот","семьсот","восемьсот","девятьсот"];
+function triad(n){
+let a=[],h=Math.floor(n/100),r=n%100;
+if(h)a.push(huns[h]);
+if(r>=20){a.push(tens[Math.floor(r/10)]);if(r%10)a.push(ones[r%10])}
+else if(r>=10)a.push(["десять","одиннадцать","двенадцать","тринадцать","четырнадцать","пятнадцать","шестнадцать","семнадцать","восемнадцать","девятнадцать"][r-10]);
+else if(r)a.push(ones[r]);
+return a.join(" ");
 }
-function form(n,a,b,c){
- let x=n%100;
- if(x>10&&x<20)return c;
- x=n%10;
- if(x==1)return a;
- if(x>=2&&x<=4)return b;
- return c;
+function words(n){
+if(n>=1000000){let m=Math.floor(n/1000000);return triad(m)+" миллион "+triad(n%1000000)}
+if(n>=1000){let t=Math.floor(n/1000);return triad(t)+" тысяч "+triad(n%1000)}
+return triad(n)
 }
-function numberToWords(n){
- if(n===0)return "ноль";
- let r=[];
- let m=Math.floor(n/1000000);
- let t=Math.floor(n/1000)%1000;
- let e=n%1000;
- if(m){r.push(triad(m));r.push(form(m,"миллион","миллиона","миллионов"))}
- if(t){r.push(triad(t,true));r.push(form(t,"тысяча","тысячи","тысяч"))}
- if(e)r.push(triad(e));
- return r.join(" ");
-}
-
-let round=1,score=0,correct="";
-function randomNumber(){
- if(round<=3)return Math.floor(Math.random()*900)+100;
- if(round<=6)return Math.floor(Math.random()*90000)+1000;
- if(round<=9)return Math.floor(Math.random()*9000000)+100000;
- return Math.floor(Math.random()*900000000)+1000000;
-}
-
 function generate(){
- let n=randomNumber();
- correct=numberToWords(n);
- number.textContent=n.toLocaleString("ru-RU");
- round && (document.getElementById("round").textContent=round);
- score && (document.getElementById("score").textContent=score);
- bar.style.width=((round-1)/12*100)+"%";
-
- let arr=[correct];
- while(arr.length<4){
-  let f=numberToWords(randomNumber());
-  if(!arr.includes(f))arr.push(f);
- }
- arr.sort(()=>Math.random()-.5);
- answers.innerHTML="";
- arr.forEach(x=>{
-  let b=document.createElement("button");
-  b.className="answer";
-  b.textContent=x;
-  b.onclick=()=>{
-   document.querySelectorAll(".answer").forEach(a=>a.disabled=true);
-   if(x===correct){b.classList.add("correct");score+=10}
-   else{b.classList.add("wrong");document.querySelectorAll(".answer").forEach(a=>{if(a.textContent===correct)a.classList.add("correct")})}
-   document.getElementById("score").textContent=score;
-  };
-  answers.appendChild(b);
- });
-}
-
-
-document.getElementById("next").onclick=()=>{
- if(round < 12){
-   round++;
-   generate();
- } else {
-   document.querySelector(".card").innerHTML =
-   `<div class="result">
-      <h2>🏆 Игра окончена!</h2>
-      <h3>${score} из 120 баллов</h3>
-      <button class="primary" onclick="location.reload()">Сыграть ещё раз</button>
-    </div>`;
- }
+answered=false;
+let max=round<4?999:round<8?999999:999999999;
+let min=round<4?100:1000;
+let n=Math.floor(Math.random()*(max-min))+min;
+correct=words(n).replace(/\s+/g," ").trim();
+number.textContent=n.toLocaleString("ru-RU");
+round && (document.getElementById("round").textContent=round);
+bar.style.width=((round-1)/12*100)+"%";
+let arr=[correct];
+while(arr.length<4){let x=words(Math.floor(Math.random()*max)+1);if(!arr.includes(x))arr.push(x)}
+arr.sort(()=>Math.random()-.5);
+answers.innerHTML="";
+arr.forEach(t=>{
+let b=document.createElement("button");b.textContent=t;
+b.onclick=()=>{
+if(answered)return;answered=true;
+document.querySelectorAll(".answers button").forEach(x=>x.disabled=true);
+if(t===correct){b.classList.add("correct");score+=10}
+else{b.classList.add("wrong");[...answers.children].find(x=>x.textContent===correct)?.classList.add("correct")}
+scoreEl=document.getElementById("score");scoreEl.textContent=score;
 };
-
+answers.appendChild(b)
+})
+}
+next.onclick=()=>{
+if(round<12){round++;generate()}
+else{
+card.innerHTML=`<div class="result"><h2>🏆 Игра окончена</h2><h3>${score} из 120 баллов</h3><button class="next" id="restart">Сыграть ещё раз</button>
+<div class="subscribe">🎓 Больше интерактивных заданий по математике<a href="https://t.me/lera_easy_math" target="_blank">Подписаться на канал автора</a></div></div>`;
+document.getElementById("restart").onclick=()=>location.reload();
+}
+}
 generate();
 </script>
 </body>
