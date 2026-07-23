@@ -37,6 +37,7 @@ border-radius:22px;padding:16px;border:2px solid #f2dfd5;
 background:#fff8f3;font-size:17px;font-weight:700;cursor:pointer
 }
 button:hover{transform:translateY(-2px)}
+button:disabled{cursor:default}
 .correct{background:#e8f8ee!important;border-color:#68c38c!important}
 .wrong{background:#fff0f0!important;border-color:#ef9299!important}
 .next,.subscribe a{
@@ -84,56 +85,161 @@ border-radius:25px
 </div>
 </div>
 <script>
-let round=1,score=0,answered=false,correct="";
-const ones=["","один","два","три","четыре","пять","шесть","семь","восемь","девять"];
-const tens=["","","двадцать","тридцать","сорок","пятьдесят","шестьдесят","семьдесят","восемьдесят","девяносто"];
-const huns=["","сто","двести","триста","четыреста","пятьсот","шестьсот","семьсот","восемьсот","девятьсот"];
-function triad(n){
-let a=[],h=Math.floor(n/100),r=n%100;
-if(h)a.push(huns[h]);
-if(r>=20){a.push(tens[Math.floor(r/10)]);if(r%10)a.push(ones[r%10])}
-else if(r>=10)a.push(["десять","одиннадцать","двенадцать","тринадцать","четырнадцать","пятнадцать","шестнадцать","семнадцать","восемнадцать","девятнадцать"][r-10]);
-else if(r)a.push(ones[r]);
-return a.join(" ");
+let round = 1;
+let score = 0;
+let answered = false;
+let correct = "";
+
+const ones = ["","один","два","три","четыре","пять","шесть","семь","восемь","девять"];
+const onesFeminine = ["","одна","две","три","четыре","пять","шесть","семь","восемь","девять"];
+const teens = ["десять","одиннадцать","двенадцать","тринадцать","четырнадцать","пятнадцать","шестнадцать","семнадцать","восемнадцать","девятнадцать"];
+const tens = ["","","двадцать","тридцать","сорок","пятьдесят","шестьдесят","семьдесят","восемьдесят","девяносто"];
+const huns = ["","сто","двести","триста","четыреста","пятьсот","шестьсот","семьсот","восемьсот","девятьсот"];
+
+const card = document.getElementById("card");
+const roundEl = document.getElementById("round");
+const scoreEl = document.getElementById("score");
+const bar = document.getElementById("bar");
+const numberEl = document.getElementById("number");
+const answers = document.getElementById("answers");
+const next = document.getElementById("next");
+
+function triad(n, feminine = false) {
+  const result = [];
+  const hundreds = Math.floor(n / 100);
+  const rest = n % 100;
+
+  if (hundreds) result.push(huns[hundreds]);
+
+  if (rest >= 10 && rest <= 19) {
+    result.push(teens[rest - 10]);
+  } else {
+    const ten = Math.floor(rest / 10);
+    const one = rest % 10;
+
+    if (ten) result.push(tens[ten]);
+    if (one) result.push((feminine ? onesFeminine : ones)[one]);
+  }
+
+  return result.join(" ");
 }
-function words(n){
-if(n>=1000000){let m=Math.floor(n/1000000);return triad(m)+" миллион "+triad(n%1000000)}
-if(n>=1000){let t=Math.floor(n/1000);return triad(t)+" тысяч "+triad(n%1000)}
-return triad(n)
+
+function wordForm(n, one, few, many) {
+  const lastTwo = n % 100;
+  const last = n % 10;
+
+  if (lastTwo >= 11 && lastTwo <= 19) return many;
+  if (last === 1) return one;
+  if (last >= 2 && last <= 4) return few;
+  return many;
 }
-function generate(){
-answered=false;
-let max=round<4?999:round<8?999999:999999999;
-let min=round<4?100:1000;
-let n=Math.floor(Math.random()*(max-min))+min;
-correct=words(n).replace(/\s+/g," ").trim();
-number.textContent=n.toLocaleString("ru-RU");
-round && (document.getElementById("round").textContent=round);
-bar.style.width=((round-1)/12*100)+"%";
-let arr=[correct];
-while(arr.length<4){let x=words(Math.floor(Math.random()*max)+1);if(!arr.includes(x))arr.push(x)}
-arr.sort(()=>Math.random()-.5);
-answers.innerHTML="";
-arr.forEach(t=>{
-let b=document.createElement("button");b.textContent=t;
-b.onclick=()=>{
-if(answered)return;answered=true;
-document.querySelectorAll(".answers button").forEach(x=>x.disabled=true);
-if(t===correct){b.classList.add("correct");score+=10}
-else{b.classList.add("wrong");[...answers.children].find(x=>x.textContent===correct)?.classList.add("correct")}
-scoreEl=document.getElementById("score");scoreEl.textContent=score;
+
+function words(n) {
+  if (n === 0) return "ноль";
+
+  const result = [];
+  const millions = Math.floor(n / 1_000_000);
+  const thousands = Math.floor(n / 1_000) % 1_000;
+  const units = n % 1_000;
+
+  if (millions) {
+    result.push(triad(millions));
+    result.push(wordForm(millions, "миллион", "миллиона", "миллионов"));
+  }
+
+  if (thousands) {
+    result.push(triad(thousands, true));
+    result.push(wordForm(thousands, "тысяча", "тысячи", "тысяч"));
+  }
+
+  if (units) result.push(triad(units));
+
+  return result.join(" ").replace(/\s+/g, " ").trim();
+}
+
+function getRange(currentRound) {
+  if (currentRound <= 3) return { min: 100, max: 999 };
+  if (currentRound <= 7) return { min: 1_000, max: 999_999 };
+  return { min: 1_000_000, max: 999_999_999 };
+}
+
+function randomInteger(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function generate() {
+  answered = false;
+
+  const { min, max } = getRange(round);
+  const n = randomInteger(min, max);
+
+  correct = words(n);
+  numberEl.textContent = n.toLocaleString("ru-RU");
+  roundEl.textContent = round;
+  scoreEl.textContent = score;
+  bar.style.width = ((round - 1) / 12 * 100) + "%";
+
+  const options = new Set([correct]);
+
+  while (options.size < 4) {
+    const distractorNumber = randomInteger(min, max);
+    options.add(words(distractorNumber));
+  }
+
+  const shuffledOptions = [...options].sort(() => Math.random() - 0.5);
+  answers.innerHTML = "";
+
+  shuffledOptions.forEach(text => {
+    const button = document.createElement("button");
+    button.textContent = text;
+
+    button.onclick = () => {
+      if (answered) return;
+      answered = true;
+
+      document.querySelectorAll(".answers button").forEach(item => {
+        item.disabled = true;
+      });
+
+      if (text === correct) {
+        button.classList.add("correct");
+        score += 10;
+      } else {
+        button.classList.add("wrong");
+        [...answers.children]
+          .find(item => item.textContent === correct)
+          ?.classList.add("correct");
+      }
+
+      scoreEl.textContent = score;
+    };
+
+    answers.appendChild(button);
+  });
+}
+
+next.onclick = () => {
+  if (round < 12) {
+    round++;
+    generate();
+    return;
+  }
+
+  card.innerHTML = `
+    <div class="result">
+      <h2>🏆 Игра окончена</h2>
+      <h3>${score} из 120 баллов</h3>
+      <button class="next" id="restart">Сыграть ещё раз</button>
+      <div class="subscribe">
+        🎓 Больше интерактивных заданий по математике
+        <a href="https://t.me/lera_easy_math" target="_blank">Подписаться на канал автора</a>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("restart").onclick = () => location.reload();
 };
-answers.appendChild(b)
-})
-}
-next.onclick=()=>{
-if(round<12){round++;generate()}
-else{
-card.innerHTML=`<div class="result"><h2>🏆 Игра окончена</h2><h3>${score} из 120 баллов</h3><button class="next" id="restart">Сыграть ещё раз</button>
-<div class="subscribe">🎓 Больше интерактивных заданий по математике<a href="https://t.me/lera_easy_math" target="_blank">Подписаться на канал автора</a></div></div>`;
-document.getElementById("restart").onclick=()=>location.reload();
-}
-}
+
 generate();
 </script>
 </body>
